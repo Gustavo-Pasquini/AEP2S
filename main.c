@@ -6,16 +6,25 @@
 void limpaEntrada();
 void criptografarASCII(const char *input, char *output);
 void descriptografarASCII(const char *input, char *output);
+void arquivo(int tp);
+
+int totuser=0;
+char emailArmazenado[15][50];
+char senhaArmazenada[15][150];
+
 
 int main() {
+
+    arquivo(0);
+
+    printf("%s", emailArmazenado[0]);
+
     char acao;
     char email[50];
     char senha[50];
     char senhaConf[50];
     char senhaCript[150]; // 3x o tamanho da senha original
-    char senhaArmazenada[150];
-    char senhaDescript[50];
-    char emailArmazenado[50];
+    char senhaDescript[15][50];
     int conferencia;
     int contaCriada = 0; 
 
@@ -32,9 +41,11 @@ int main() {
             limpaEntrada();
             printf("Digite o seu email: ");
             scanf("%s", email);
-            if (contaCriada && strcmp(email, emailArmazenado) == 0) {
-                printf("O email digitado já está cadastrado no sistema!\n");
-                continue; 
+            for (int i = 0; i < totuser; i++){
+                if (contaCriada && strcmp(email, emailArmazenado[i]) == 0) {
+                    printf("O email digitado já está cadastrado no sistema!\n");
+                    continue; 
+                }
             }
             
             // Pede para o usuário criar a senha duas vezes para conferência
@@ -120,4 +131,39 @@ void descriptografarASCII(const char *input, char *output) {
         output[i / 3] = (char)atoi(buffer); // Converte de volta para caractere
     }
     output[i / 3] = '\0'; // Finaliza a string
+}
+
+void arquivo(int tp){ //0 - leitura / 1 - gravacao
+  char linha[15],tmp[15]; 
+  int x;
+  FILE *file; //associa vari�vel file em tipo FILE (palavra reservada que caracteriza fim de string)
+    file = fopen("emailesenha.txt", "r"); //Associa file em "emailesenha.txt" e tenta abrir arquivo para leitura
+    if (file != NULL && tp == 0) { //se n�o deu erro na abertura e o TIPO for igual a 0
+        totuser=0;
+        x=0;
+        while (fgets(linha, sizeof(linha), file) != NULL && strlen(linha)>0) { 
+          linha[strlen(linha)-1]='\0'; //coloca caracter null no fim da string (caracteriza fim)
+            if (x%2==1){ //linha impar
+              totuser++; //incrementa o total de usuarios no vetor
+              //aplicar o procedimento ou func�o que descritografa se quiser
+              strcpy(emailArmazenado[totuser-1],linha); //copia linha em nome[]
+              }
+            else //linha par
+              //aplicar o procedimento ou func�o que descritografa se quiser
+              strcpy(senhaArmazenada[totuser-1],linha); //copia linha em senha[]
+              x++; //incrementa x. Cada vez que passar pela leitura da linha, ser� lido ou nome ou senha (linha impar / linha par)
+        }
+    }
+    else{ //caso nao tenha aberto o arquivo para leitura ou o tipo seja diferente de zero
+      file = fopen("NomeArq.txt", "w"); //Associa file em "NomeArq.txt" e cria o arquivo (mesmo que ele j� exista - sobrescrevendo-o)
+        for (x=0;x<totuser;x++){ //la�o de 0 at� total de usuarios no Vetor-1
+          strcpy(tmp,emailArmazenado[x]); //copia o nome[x] em tmp
+          //aplicar a criptografa tmp (nome) se quiser
+          fprintf(file, "%s\n", tmp); //grava no arquivo
+          strcpy(tmp,senhaArmazenada[x]); //copia o nome[x] em tmp 
+          //aplicar a criptografa tmp (senha) se quiser
+          fprintf(file, "%s\n", tmp); //grava no arquivo o conte�do de tmp
+        } 
+   }
+    fclose(file); //fecha arquivo
 }
