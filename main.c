@@ -220,7 +220,7 @@ void listarContas() {
         printf("  Usuario: %s\n", usuarioArmazenado[i]);
         printf("  Senha (Criptografada): %s\n", senhaArmazenada[i]);
 
-        printf("  Deseja ver a senha criptografada? (S/N): ");
+        printf("  Deseja ver a senha descriptografada? (S/N): ");
         scanf(" %c", &opcao);
         limpaEntrada();
 
