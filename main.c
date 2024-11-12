@@ -18,16 +18,15 @@ int senhaValida(char *s);
 #define MAX_USERS 15
 #define SENHA_ADMIN "Admin@2201"
 int totuser = 0;
-int isAdmin = 0; 
+int isAdmin = 0;
 char usuarioArmazenado[MAX_USERS][50];
 char senhaArmazenada[MAX_USERS][150];
 
 int main() {
     setlocale(LC_ALL, "Portuguese_Brazil");
-    
+
     // Carregar dados do arquivo
     salvarOuCarregarArquivo(0);
-    
 
     char acao;
 
@@ -120,7 +119,6 @@ void atualizarSenha() {
     char usuario[50], senha[50], senhaCript[150], novaSenha[50], confereSenhaAdmin[50];
 
     if(isAdmin){
-
         printf("  Digite o seu usuario para atualizar a senha: ");
         scanf("%s", usuario);
         limpaEntrada();
@@ -134,8 +132,9 @@ void atualizarSenha() {
                 do {
                    printf("  Digite a nova senha: ");
                    scanf("%s", novaSenha);
-                } while (!senhaValida(senha));
-                limpaEntrada();
+                   limpaEntrada();
+                } while (!senhaValida(novaSenha));
+
                 criptografarASCII(novaSenha, senhaArmazenada[i]);
                 salvarOuCarregarArquivo(1);
                 printf("  Senha atualizada com sucesso!\n");
@@ -145,10 +144,9 @@ void atualizarSenha() {
         printf("  Usuario ou senha incorreta.\n");
 
     } else {
-
         printf("  Digite a senha de administrador: ");
         fgets(confereSenhaAdmin, sizeof(confereSenhaAdmin), stdin);
-        confereSenhaAdmin[strcspn(confereSenhaAdmin, "\n")] = '\0';     
+        confereSenhaAdmin[strcspn(confereSenhaAdmin, "\n")] = '\0';
 
         if (strcmp(SENHA_ADMIN, confereSenhaAdmin) != 0){
             printf("\n  Senha incorreta!\n");
@@ -156,7 +154,6 @@ void atualizarSenha() {
             isAdmin = 1;
             atualizarSenha();
         }
-
     }
 }
 
@@ -164,7 +161,6 @@ void deletarConta() {
     char usuario[50], senha[50], senhaCript[150], confereSenhaAdmin[50];
 
     if(isAdmin){
-
         printf("  Digite o seu usuario para excluir a conta: ");
         scanf("%s", usuario);
         limpaEntrada();
@@ -188,20 +184,17 @@ void deletarConta() {
         printf("  Conta não encontrada ou senha incorreta.\n");
 
     } else {
-
         printf("  Digite a senha de administrador: ");
         fgets(confereSenhaAdmin, sizeof(confereSenhaAdmin), stdin);
-        confereSenhaAdmin[strcspn(confereSenhaAdmin, "\n")] = '\0';     
+        confereSenhaAdmin[strcspn(confereSenhaAdmin, "\n")] = '\0';
 
         if (strcmp(SENHA_ADMIN, confereSenhaAdmin) != 0){
             printf("\n  Senha incorreta!\n");
         } else {
             isAdmin = 1;
-            atualizarSenha();
+            deletarConta();
         }
-
     }
- 
 }
 
 void listarContas() {
@@ -229,18 +222,17 @@ void listarContas() {
                 printf("  Digite a senha de administrador: ");
                 fgets(confereSenhaAdmin, sizeof(confereSenhaAdmin), stdin);
                 confereSenhaAdmin[strcspn(confereSenhaAdmin, "\n")] = '\0';
-                
+
                 if(strcmp(confereSenhaAdmin, SENHA_ADMIN) == 0){
                     isAdmin = 1;
                     printf("  Senha (Descriptografada): %s\n", senhaDescript);
                 } else {
                     printf("\n  Senha incorreta!\n");
-                } 
+                }
 
             } else {
-                printf("  Senha (Descriptografada): %s\n", senhaDescript);              
+                printf("  Senha (Descriptografada): %s\n", senhaDescript);
             }
-
         }
     }
 }
@@ -261,66 +253,45 @@ void criptografarASCII(const char *input, char *output) {
 void descriptografarASCII(const char *input, char *output) {
     int i;
     for (i = 0; i < strlen(input); i += 4) {
-        char buffer[5];
-        strncpy(buffer, &input[i], 4);
-        buffer[4] = '\0';
-        
-        // Convertemos de volta para inteiro e dividimos por 3
-        output[i / 4] = (char)(atoi(buffer) / 3);
+        char temp[5];
+        strncpy(temp, &input[i], 4);
+        temp[4] = '\0';
+        output[i / 4] = (char)(atoi(temp) / 3);
     }
     output[i / 4] = '\0';
 }
 
-void salvarOuCarregarArquivo(int tp) { // 0 - leitura / 1 - gravação
-    FILE *file;
-
+void salvarOuCarregarArquivo(int tp) {
+    FILE *arquivo;
     if (tp == 0) {
-        file = fopen("usuarioesenha.txt", "r");
-        if (file != NULL) {
-            totuser = 0;
-            int x = 0;
-            char linha[150];
-            while (fgets(linha, sizeof(linha), file) != NULL && totuser < MAX_USERS) {
-                linha[strlen(linha) - 1] = '\0'; // Remove o '\n' final
-                if (x % 2 == 0) {
-                    strcpy(usuarioArmazenado[totuser], linha);
-                } else {
-                    strcpy(senhaArmazenada[totuser], linha);
-                    totuser++;
-                }
-                x++;
+        arquivo = fopen("usuarioesenha.txt", "r");
+        if (arquivo != NULL) {
+            while (fscanf(arquivo, "%s %s", usuarioArmazenado[totuser], senhaArmazenada[totuser]) != EOF) {
+                totuser++;
             }
-            fclose(file);
-        } else {
-            printf("Erro ao abrir o arquivo para leitura.\n");
+            fclose(arquivo);
         }
     } else {
-        file = fopen("usuarioesenha.txt", "w");
-        if (file != NULL) {
+        arquivo = fopen("usuarioesenha.txt", "w");
+        if (arquivo != NULL) {
             for (int i = 0; i < totuser; i++) {
-                fprintf(file, "%s\n", usuarioArmazenado[i]);
-                fprintf(file, "%s\n", senhaArmazenada[i]);
+                fprintf(arquivo, "%s %s\n", usuarioArmazenado[i], senhaArmazenada[i]);
             }
-            fclose(file);
-        } else {
-            printf("Erro ao abrir o arquivo para gravação.\n");
+            fclose(arquivo);
         }
     }
 }
 
 void ordenaUsuarios() {
-    char tempUser[50], tempSenha[150];
-    char usuariosMinusculo[MAX_USERS][50];
-
+    // Função para ordenação dos usuarios
     for (int i = 0; i < totuser - 1; i++) {
         for (int j = i + 1; j < totuser; j++) {
             if (strcmp(usuarioArmazenado[i], usuarioArmazenado[j]) > 0) {
-                // Troca os usuarios
+                char tempUser[50], tempSenha[150];
                 strcpy(tempUser, usuarioArmazenado[i]);
                 strcpy(usuarioArmazenado[i], usuarioArmazenado[j]);
                 strcpy(usuarioArmazenado[j], tempUser);
 
-                // Troca as senhas associadas
                 strcpy(tempSenha, senhaArmazenada[i]);
                 strcpy(senhaArmazenada[i], senhaArmazenada[j]);
                 strcpy(senhaArmazenada[j], tempSenha);
@@ -330,13 +301,14 @@ void ordenaUsuarios() {
 }
 
 int senhaValida(char *s) {
-    int v1 = 0, v2 = 0, v3 = 0, v4 = 0, v5 = 0;
-    if (strlen(s) >= 8 && strlen(s) <= 20) v1 = 1;
+    int hasUpper = 0, hasLower = 0, hasDigit = 0, hasSpecial = 0;
+
     for (int i = 0; s[i] != '\0'; i++) {
-        if (isupper(s[i])) v2 = 1;
-        if (islower(s[i])) v3 = 1;
-        if (isdigit(s[i])) v4 = 1;
-        if (ispunct(s[i])) v5 = 1;
+        if (isupper(s[i])) hasUpper = 1;
+        if (islower(s[i])) hasLower = 1;
+        if (isdigit(s[i])) hasDigit = 1;
+        if (ispunct(s[i])) hasSpecial = 1;
     }
-    return v1 && v2 && v3 && v4 && v5;
+
+    return (hasUpper && hasLower && hasDigit && hasSpecial);
 }
